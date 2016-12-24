@@ -32,7 +32,7 @@ model.add(Dense(2))
 model.compile(loss='mse', optimizer=sgd(lr=0.0001))
 
 if load_model == 1:
-	model.load_weights("cartpole.keras")
+	model.load_weights("cartpole-v0.keras")
 
 env = gym.make('CartPole-v0')
 env.monitor.start('/tmp/cartpole-experiment-1', force=True)
@@ -83,9 +83,9 @@ for episode in range(episodes):
 		target_f[0][action] = target
 		model.fit(observation_old, target_f, nb_epoch=1, verbose=0)
 	if episode % save_iter == 0:
-		model.save_weights("cartpole.keras")
+		model.save_weights("cartpole-v0.keras")
 	if episode % backup_iter == 0:
-		model.save_weights("cartpole_backup" + str(episode) + ".keras")
+		model.save_weights("cartpole_backup" + str(episode) + "-v0.keras")
 	if episode % memory_clear == 0:
 		replay_memory = []
 	epsilon -= epsilon_decay
