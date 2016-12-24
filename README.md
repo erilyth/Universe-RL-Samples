@@ -7,3 +7,4 @@
 ### Environments Under Progress
 
 * breakout-v0
+* mountaincar-v0
