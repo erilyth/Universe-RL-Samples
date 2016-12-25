@@ -38,9 +38,9 @@ env = gym.make('MountainCar-v0')
 env.monitor.start('/tmp/mountaincar-experiment-1', force=True)
 replay_memory = []
 gamma = 0.9 # Future reward decrement
-epsilon = 1.0 # Probability of selecting random action
-epsilon_min = 0.2 # Minimum random action selection probability
-episodes = 10000
+epsilon = 0.1 # Probability of selecting random action
+epsilon_min = 0.1 # Minimum random action selection probability
+episodes = 500
 epsilon_decay = (epsilon - epsilon_min) / episodes # Random action selection probability decay
 
 for episode in range(episodes):
