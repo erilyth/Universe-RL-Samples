@@ -19,7 +19,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import sgd
 
-load_model = 1
+load_model = 0
 backup_iter = 500
 save_iter = 5
 memory_clear = 100
@@ -32,10 +32,10 @@ model.add(Dense(3))
 model.compile(loss='mse', optimizer=sgd(lr=0.0001))
 
 if load_model == 1:
-	model.load_weights("mountaincar-v0.keras")
+	model.load_weights("catcher-v0.keras")
 
-env = gym.make('MountainCar-v0')
-env.monitor.start('/tmp/mountaincar-experiment-1', force=True)
+env = gym.make('Catcher-v0')
+env.monitor.start('/tmp/catcher-experiment-1', force=True)
 replay_memory = []
 gamma = 0.9 # Future reward decrement
 epsilon = 0.1 # Probability of selecting random action
@@ -45,7 +45,7 @@ epsilon_decay = (epsilon - epsilon_min) / episodes # Random action selection pro
 
 for episode in range(episodes):
 	observation = env.reset()
-	observation = np.reshape(observation, [1, 2])
+	observation = np.reshape(observation, [1, 3])
 	for time_t in range(50000):
 		print "Epsilon:", epsilon
 		env.render()
@@ -84,9 +84,9 @@ for episode in range(episodes):
 		target_f[0][action] = target
 		model.fit(observation_old, target_f, nb_epoch=1, verbose=0)
 	if episode % save_iter == 0:
-		model.save_weights("mountaincar-v0.keras")
+		model.save_weights("catcher-v0.keras")
 	if episode % backup_iter == 0:
-		model.save_weights("mountaincar_backup" + str(episode) + "-v0.keras")
+		model.save_weights("catcher_backup" + str(episode) + "-v0.keras")
 	if episode % memory_clear == 0:
 		replay_memory = []
 	epsilon -= epsilon_decay
@@ -95,4 +95,4 @@ env.monitor.close()
 # Upload onto gym
 last_chars = raw_input("Enter last two characters of key: ")
 gym.scoreboard.api_key = 'sk_Ai0CaXYKRRS4XX5mCdlJ' + last_chars
-gym.upload('/tmp/mountaincar-experiment-1')
+gym.upload('/tmp/catcher-experiment-1')
