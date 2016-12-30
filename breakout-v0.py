@@ -11,30 +11,31 @@
 """
 
 import gym
+from gym import wrappers
 import universe
 
 import time
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Convolution2D, Dropout, Flatten
+from keras.layers import Dense, Convolution2D, Dropout, Flatten, Activation
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import sgd, Adam
 
 load_model = 0
-backup_iter = 100
+backup_iter = 201
 save_iter = 5
 memory_clear = 100
 
 # Reinforcement Learning - Deep-Q learning
 model = Sequential()
 model.add(Convolution2D(512, 5, 5, subsample=(2, 2), border_mode='same', input_shape=(210, 160, 6)))
-model.add(LeakyReLU(0.2))
+model.add(Activation('relu'))
 model.add(Dropout(0.2))
 model.add(Convolution2D(256, 5, 5, subsample=(2, 2), border_mode='same'))
-model.add(LeakyReLU(0.2))
+model.add(Activation('relu'))
 model.add(Dropout(0.2))
 model.add(Convolution2D(128, 5, 5, subsample=(2, 2), border_mode='same'))
-model.add(LeakyReLU(0.2))
+model.add(Activation('relu'))
 model.add(Dropout(0.2))
 model.add(Flatten())
 model.add(Dense(256, activation='relu'))
@@ -46,14 +47,14 @@ if load_model == 1:
 	model.load_weights("breakout-v0.keras")
 
 env = gym.make('Breakout-v0')
-env.monitor.start('/tmp/breakout-experiment-1', force=True)
+env = wrappers.Monitor(env, '/tmp/breakout-experiment-1', force=True)
 replay_memory = []
 observation_prev = None
 observation_cur = None
-gamma = 0.9 # Future reward decrement
+gamma = 0.8 # Future reward decrement
 epsilon = 0.8 # Probability of selecting random action
 epsilon_min = 0.1 # Minimum random action selection probability
-episodes = 1000
+episodes = 2000
 epsilon_decay = (epsilon - epsilon_min) / episodes # Random action selection probability decay
 
 for episode in range(episodes):
@@ -98,9 +99,9 @@ for episode in range(episodes):
 		target_f[0][action] = target
 		model.fit(observation_old, target_f, nb_epoch=1, verbose=0)
 	if episode % save_iter == 0:
-		model.save_weights("breakout-v0.keras")
+		model.save_weights("breakout-v0.keras", overwrite=True)
 	if episode % backup_iter == 0:
-		model.save_weights("breakout_backup" + str(episode) + "-v0.keras")
+		model.save_weights("breakout_backup" + str(episode) + "-v0.keras", overwrite=True)
 	if episode % memory_clear == 0:
 		replay_memory = []
 	epsilon -= epsilon_decay
