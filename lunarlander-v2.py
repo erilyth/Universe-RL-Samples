@@ -16,8 +16,8 @@ import universe
 import time
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import sgd
+from keras.layers import Dense, Activation
+from keras.optimizers import sgd, Adam
 
 load_model = 0
 backup_iter = 500
@@ -26,27 +26,33 @@ memory_clear = 100
 
 # Reinforcement Learning - Deep-Q learning
 model = Sequential()
-model.add(Dense(128, input_dim=2, init='glorot_uniform'))
-model.add(Dense(128, init='glorot_uniform'))
-model.add(Dense(3))
-model.compile(loss='mse', optimizer=sgd(lr=0.0001))
+model.add(Dense(64, input_dim=8, init='glorot_uniform'))
+model.add(Activation('relu'))
+model.add(Dense(64, init='glorot_uniform'))
+model.add(Activation('relu'))
+model.add(Dense(4))
+model.add(Activation('relu'))
+model.compile(loss='mse', optimizer=Adam(lr=0.002, decay=2.25e-05))
 
 if load_model == 1:
-	model.load_weights("catcher-v0.keras")
+	model.load_weights("lunarlander-v2.keras")
 
-env = gym.make('Catcher-v0')
-env.monitor.start('/tmp/catcher-experiment-1', force=True)
+env = gym.make('LunarLander-v2')
+# env.monitor.start('/tmp/catcher-experiment-1', force=True)
+
+print env.action_space.n, env.observation_space.shape
+
 replay_memory = []
-gamma = 0.9 # Future reward decrement
-epsilon = 0.1 # Probability of selecting random action
+gamma = 0.98 # Future reward decrement
+epsilon = 0.9 # Probability of selecting random action
 epsilon_min = 0.1 # Minimum random action selection probability
-episodes = 500
+episodes = 5000
 epsilon_decay = (epsilon - epsilon_min) / episodes # Random action selection probability decay
 
 for episode in range(episodes):
 	observation = env.reset()
-	observation = np.reshape(observation, [1, 3])
-	for time_t in range(50000):
+	observation = np.reshape(observation, [1, 8])
+	for time_t in range(3000):
 		print "Epsilon:", epsilon
 		env.render()
 		# Action space is either 0 or 1 for cartpole
@@ -56,13 +62,13 @@ for episode in range(episodes):
 		action = np.argmax(action[0])
 		if np.random.uniform(0,1) < epsilon:
 			# Either 0 or 1 sample the action randomly
-			action = np.random.randint(3)
+			action = np.random.randint(4)
 		#action = env.action_space.sample()
 		# print "Action:", action
 		observation_old = observation
 		observation, reward, done, info = env.step(action)
 		print "Reward:", reward
-		observation = np.reshape(observation, [1, 2])
+		observation = np.reshape(observation, [1, 8])
 		print "Observation:", observation
 		replay_memory.append([observation_old, action, reward, observation])
 		if done:
@@ -84,15 +90,15 @@ for episode in range(episodes):
 		target_f[0][action] = target
 		model.fit(observation_old, target_f, nb_epoch=1, verbose=0)
 	if episode % save_iter == 0:
-		model.save_weights("catcher-v0.keras")
+		model.save_weights("lunarlander-v2.keras")
 	if episode % backup_iter == 0:
-		model.save_weights("catcher_backup" + str(episode) + "-v0.keras")
+		model.save_weights("lunarlander_backup" + str(episode) + "-v2.keras")
 	if episode % memory_clear == 0:
 		replay_memory = []
 	epsilon -= epsilon_decay
 
-env.monitor.close()
+# env.monitor.close()
 # Upload onto gym
-last_chars = raw_input("Enter last two characters of key: ")
-gym.scoreboard.api_key = 'sk_Ai0CaXYKRRS4XX5mCdlJ' + last_chars
-gym.upload('/tmp/catcher-experiment-1')
+# last_chars = raw_input("Enter last two characters of key: ")
+# gym.scoreboard.api_key = 'sk_Ai0CaXYKRRS4XX5mCdlJ' + last_chars
+# gym.upload('/tmp/lunarlander-experiment-1')
